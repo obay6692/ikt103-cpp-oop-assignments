@@ -1,78 +1,110 @@
-//Optional
-#include <iostream>
-#include "rapidjson/istreamwrapper.h"
-#include <list>
-#include <limits>
-#include <fstream>
-//Optional
 #include "rapidjson/document.h"
-#include <cmath>
+#include "rapidjson/writer.h"
+#include "rapidjson/reader.h"
+#include "rapidjson/stringbuffer.h"
+#include <iostream>
+#include <fstream>
+#include <list>
 #include "student.h"
 
-int main() {
-    // hmmmmmmmmmmmmmm
-    std::ifstream ifs("students.json");
-    rapidjson::IStreamWrapper isw(ifs);
-//rapidjsonn
-    rapidjson::Document d;
-    d.ParseStream(isw);
+using namespace std;
+using namespace rapidjson;
 
-    // liisttt
-    std::list<Student*> students; // Endret til std::list<Student*>
-    for (const auto& m : d.GetArray()) {
-        students.emplace_back(
-                new Student(
-                        m["id"].GetInt(),
-                        m["name"].GetString(),
-                        m["age"].GetInt(),
-                        m["attendance"].GetInt()
-                )
-        );
-    }
 
-    // Find attendance
-    int minAge = std::numeric_limits<int>::max();
-    int maxAge = std::numeric_limits<int>::min();
-    std::string youngest, oldest;
-    //www.o
-    int totalAge = 0;
-
-    std::list<std::string> badStudents;
-
-    for (const auto* student : students) { // Endret til const auto* student
-        // Finn den eldste og yngste studenten
-        if (student->AALDDER < minAge) { // Endret til student->AALDDER
-            minAge = student->AALDDER; // Endret til student->AALDDER
-            youngest = student->NAAME; // Endret til student->NAAME
-        }
-        if (student->AALDDER > maxAge) { // Endret til student->AALDDER
-            maxAge = student->AALDDER; // Endret til student->AALDDER
-            oldest = student->NAAME; // Endret til student->NAAME
-        }
-
-        totalAge += student->AALDDER; // Endret til student->AALDDER
-
-        // Ffind student with bad attendance
-        if (student->oppmøte < 30) { // Endret til student->oppmøte
-            badStudents.push_back(student->NAAME); // Endret til student->NAAME
+void print_younger_student(list<Student*> &students)
+{
+    Student younger_student = *(students.front());
+    for (auto s : students)
+    {
+        if (s->get_age() < younger_student.get_age())
+        {
+            younger_student = *s;
         }
     }
+    cout << "Youngest: " << younger_student.get_name() << endl;
+}
 
-    // Finn average age
-    int averageAge = std::floor(static_cast<double>(totalAge) / students.size());
+void print_older_student(list<Student*> &students)
+{
+    Student older_student = *(students.front());
+    for (auto s : students)
+    {
+        if (s->get_age() > older_student.get_age())
+        {
+            older_student = *s;
+        }
+    }
+    cout << "Oldest: " << older_student.get_name() << endl;
+}
 
-    // odofojoj
-    std::cout << "Youngest: " << youngest << std::endl;
-    std::cout << "Oldest: " << oldest << std::endl;
-    std::cout << "Average age: " << averageAge << std::endl;
-    for (const auto& name : badStudents) {
-        std::cout << "Bad student: " << name << std::endl;
+void print_average_age(list<Student*> &students)
+{
+    int sum = 0;
+    for (auto s : students)
+    {
+        sum += s->get_age();
+    }
+    cout << "Average age: " << sum / students.size() << endl;
+}
+
+void print_bad_attendance(list<Student*> &students)
+{
+    for (auto s : students)
+    {
+        if (s->get_attendance() < 30)
+        {
+            cout << "Bad student: " << s->get_name() << endl;
+        }
+    }
+}
+
+int main(void)
+{
+    Document d;
+    // using rapid json to read the students.json file
+    ifstream file("students.json");
+    string json((istreambuf_iterator<char>(file)), istreambuf_iterator<char>());
+
+    // parse
+    d.Parse(json.c_str());
+
+    file.close();
+
+    if (d.HasParseError())
+    {
+        cerr << "Error parsing students.json" << d.GetParseError() << endl;
+        return 1;
+    }
+    list<Student*> students;
+
+    if (d.Empty())
+    {
+        cerr << "Error parsing students.json" << endl;
+        return 1;
     }
 
-    // Slett studentene for å unngå minnelkninger
-    for (auto* student : students) {
-        delete student;
+    auto students_array = d.GetArray();
+    for (auto &s : students_array)
+    {
+        Student* student = new Student();
+        if(s.HasMember("id"))
+            student->set_id(s["id"].GetInt());
+        if(s.HasMember("name"))
+            student->set_name(s["name"].GetString());
+        if(s.HasMember("age"))
+            student->set_age(s["age"].GetInt());
+        if(s.HasMember("attendance"))
+            student->set_attendance(s["attendance"].GetInt());
+
+        students.push_back(student);
     }
 
+    print_younger_student(students);
+    print_older_student(students);
+    print_average_age(students);
+    print_bad_attendance(students);
+
+    // clear students
+    students.clear();
     return 0;
 }

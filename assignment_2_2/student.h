@@ -1,18 +1,24 @@
-#ifndef STUDENT_H
-#define STUDENT_H
+#ifndef _STUDENT_H
+#define _STUDENT_H
 
-#include <string>
+#include <iostream>
+
 class Student {
-public:
-    std::string NAAME;
-    int oppmøte;
-    int AALDDER;
-    int IIIDD;
+    public:
+        void set_id(int id);
+        void set_name(std::string name);
+        void set_age(int age);
+        void set_attendance(int attendance);
 
-    Student(int id, std::string name, int age, int attendance)
-            : IIIDD(id), NAAME(name), AALDDER(age), oppmøte(attendance) {}
+        int get_id();
+        std::string get_name();
+        int get_age();
+        int get_attendance();
+    private:
+        int id;
+        std::string name;
+        int age;
+        int attendance;
 };
 
-
-
-#endif // STUDENT_H
+#endif
